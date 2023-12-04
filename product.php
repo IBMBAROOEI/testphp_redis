@@ -1,50 +1,11 @@
 <?php
 
-include_once("database.php");
+include_once "Database.php";
 $databaseObj = new Database();
 $result = $databaseObj->displayData();
-
-function sortProductsByMaxQuntity($a, $b)
-{
-    return $b['quntity'] - $a['quntity'];
-}
-
-function sortbynewcreate_at($a, $b)
-{
-    return strtotime($b['create_at']) - strtotime($a['create_at']);
-}
-
-
-
-
-$databaseObj = new Database();
-$result = $databaseObj->displayData();
-
-if (isset($_GET['sort'])) {
-    $sort = $_GET['sort'];
-
-    if ($sort == 'quntity') {
-        if (is_array($result)) {
-            usort($result, 'sortProductsByMaxQuntity');
-        } else {
-            echo "";
-        }
-    }
-
-    if ($sort == 'create_at') {
-        if (is_array($result)) {
-            usort($result, 'sortbynewcreate_at');
-        } else {
-            echo "";
-        }
-    }
-}
-
-// displayProducts($result);
-
-
 
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -55,6 +16,7 @@ if (isset($_GET['sort'])) {
         }
     </style>
     <title>Product List</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
 </head>
 <body>
@@ -71,19 +33,25 @@ if (isset($_GET['sort'])) {
 <?php
 
 foreach ($result as $elements) {
-    echo '<div class="col-lg-4">';
+    echo '<div class="col-lg-4  result">';
     echo '<div class="card" style="width: 18rem;">';
     echo '<h5>'.$elements['id']. '</h5>';
     echo '<img class="card-img-top" alt="" src="image/' . $elements['Image'] . '">';
     echo '<div class="card-body">';
-    echo '<h5 class="card-title">' . $elements['NAME_PRODUCT'] . '</h5>';
-    echo '<p class="card-text">' . $elements['Code_product'] . '</p>';
-    echo ' تعداد<p class="card-text">' . $elements['quntity'] . '</p>';
+    echo ' نام محصول:<h5 class="card-title">' . $elements['NAME_PRODUCT'] . '</h5>';
+    echo ' کد محصول:<p class="card-text">' . $elements['Code_product'] . '</p>';
     echo '</div>';
     echo '<ul class="list-group list-group-flush">';
    
-    echo '<li class="list-group-item">' . $elements['Original_price'] . '</li>';
-    echo 'درصد تخفیف<li class="list-group-item">' . $elements['discount_percentage'] . '</li>';
+    echo ' قیمت:<li class="list-group-item">' . $elements['Original_price'] . '</li>';
+    
+    if (isset($elements['discount_percentage']) && $elements['discount_percentage'] != '') {
+      echo 'درصد تخفیف:<li class="list-group-item">' . $elements['discount_percentage'] . '</li>';
+  } else {
+      echo 'درصد تخفیف:<li class="list-group-item">تخفیف ندارد</li>';
+  }
+
+
     echo '</ul>';
     echo '<div class="card-body">';
     echo '
@@ -156,12 +124,13 @@ foreach ($result as $elements) {
 
 
 
+
 <div class="col-2">
 <div class="row">
 <div class="col">
 <form action="showproduct.php" method="get">
               <select name="sort" onchange="this.form.submit()">
-              <lable>نمایش  بیشترین تعداد محصولات </lable>
+                  <lable>نمایش  بیشترین تعداد محصولات </lable>
                 <option value=""></option>
   
   
@@ -175,6 +144,35 @@ foreach ($result as $elements) {
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous">
+
+
+
+
+
+$(document).ready(function() {
+  $('select[name="sort"]').change(function() {
+    var selectedOption = $(this).val();
+    
+    // ارسال درخواست Ajax به سرور
+    $.ajax({
+      url: 'showproduct.php', // آدرس فایل PHP که داده‌ها را بر اساس انتخاب کاربر پردازش می‌کند
+      type: 'GET',
+      data: { sort: selectedOption },
+      success: function(response) {
+        // پردازش پاسخ بازگشتی
+        // مثلاً بارگیری محتوای جدید به عنوان نتیجه Ajax
+        
+        // مثال:
+        $('#result').html(response); 
+      },
+      error: function() {
+        alert('خطا در برقراری ارتباط با سرور.');
+      }
+    });
+  });
+});
+</script>
 </body>
 </html>
